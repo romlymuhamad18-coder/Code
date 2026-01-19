@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Absensi Kelas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #1e3a5f 0%, #1e3a5f 100%);
+    }
+    
+    .card-glass {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    
+    .status-hadir {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .status-izin {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    
+    .status-sakit {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+    
+    .status-alpha {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .input-field {
+      transition: all 0.3s ease;
+      border: 2px solid #e5e7eb;
+    }
+    
+    .input-field:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    
+    .table-row {
+      transition: all 0.3s ease;
+    }
+    
+    .table-row:hover {
+      background: #f8fafc;
+      transform: scale(1.01);
+    }
+    
+    .stat-card {
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .delete-btn {
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .table-row:hover .delete-btn {
+      opacity: 1;
+    }
+    
+    .confirm-delete {
+      animation: fadeIn 0.2s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-slide-in {
+      animation: slideIn 0.5s ease forwards;
+    }
+    
+    .toast {
+      animation: slideInToast 0.3s ease;
+    }
+    
+    @keyframes slideInToast {
+      from { opacity: 0; transform: translateX(100%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full w-full gradient-bg overflow-auto">
+  <div class="min-h-full w-full p-4 md:p-8"><!-- Header -->
+   <header class="text-center mb-8 animate-slide-in">
+    <div class="inline-flex items-center gap-3 mb-4">
+     <svg class="w-12 h-12 text-white" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+     </svg>
+     <h1 id="class-title" class="text-3xl md:text-4xl font-bold text-white tracking-tight">Sistem Absensi Kelas</h1>
+    </div>
+    <div class="flex flex-wrap justify-center gap-4 text-white/80"><span id="teacher-display" class="flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg> Guru: Romly Muhamad </span> <span id="subject-display" class="flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg> SDN 119 Cijagra </span> <span class="flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg><span id="current-date"></span> </span>
+    </div>
+   </header><!-- Statistics Cards -->
+   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-6xl mx-auto">
+    <div class="stat-card card-glass rounded-2xl p-4 text-center" style="animation-delay: 0.1s">
+     <div class="w-12 h-12 mx-auto mb-3 rounded-xl status-hadir flex items-center justify-center">
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+     </div>
+     <p id="stat-hadir" class="text-3xl font-bold text-gray-800">0</p>
+     <p class="text-sm text-gray-500 font-medium">Hadir</p>
+    </div>
+    <div class="stat-card card-glass rounded-2xl p-4 text-center" style="animation-delay: 0.2s">
+     <div class="w-12 h-12 mx-auto mb-3 rounded-xl status-izin flex items-center justify-center">
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+     </div>
+     <p id="stat-izin" class="text-3xl font-bold text-gray-800">0</p>
+     <p class="text-sm text-gray-500 font-medium">Izin</p>
+    </div>
+    <div class="stat-card card-glass rounded-2xl p-4 text-center" style="animation-delay: 0.3s">
+     <div class="w-12 h-12 mx-auto mb-3 rounded-xl status-sakit flex items-center justify-center">
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+     </div>
+     <p id="stat-sakit" class="text-3xl font-bold text-gray-800">0</p>
+     <p class="text-sm text-gray-500 font-medium">Sakit</p>
+    </div>
+    <div class="stat-card card-glass rounded-2xl p-4 text-center" style="animation-delay: 0.4s">
+     <div class="w-12 h-12 mx-auto mb-3 rounded-xl status-alpha flex items-center justify-center">
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+     </div>
+     <p id="stat-alpha" class="text-3xl font-bold text-gray-800">0</p>
+     <p class="text-sm text-gray-500 font-medium">Alpha</p>
+    </div>
+   </div><!-- Main Content -->
+   <div class="max-w-6xl mx-auto grid lg:grid-cols-3 gap-6"><!-- Form Input -->
+    <div class="lg:col-span-1">
+     <div class="card-glass rounded-3xl p-6 animate-slide-in" style="animation-delay: 0.2s">
+      <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+       <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+       </svg> Input Absensi</h2>
+      <form id="attendance-form" class="space-y-4">
+       <div><label for="student-name" class="block text-sm font-semibold text-gray-700 mb-2">Nama Siswa</label> <select id="student-name" required class="input-field w-full px-4 py-3 rounded-xl outline-none text-gray-800"> <option value="">Pilih siswa...</option> <option value="Alya Dewina Maryam" data-nisn="3158356091">Alya Dewina Maryam</option> <option value="Alyssa Fedora" data-nisn="0156165252">Alyssa Fedora</option> <option value="Arsakha Rajendra Mahanimpuna" data-nisn="0143150842">Arsakha Rajendra Mahanimpuna</option> <option value="Azka Faeyza Santoso" data-nisn="3151827990">Azka Faeyza Santoso</option> <option value="Chofira Azzahra" data-nisn="0145518988">Chofira Azzahra</option> <option value="Choirunnisa Ramadhan" data-nisn="3151247049">Choirunnisa Ramadhan</option> <option value="Faradhita Santosa" data-nisn="3152669429">Faradhita Santosa</option> <option value="Firmansah Muhammad" data-nisn="3155607352">Firmansah Muhammad</option> <option value="Hisyam Sahila" data-nisn="3143139728">Hisyam Sahila</option> <option value="Khanza Nabila" data-nisn="0142577204">Khanza Nabila</option> <option value="Lathisya Nur Mahagrani" data-nisn="0158038964">Lathisya Nur Mahagrani</option> <option value="Marlo Ryanza Gumilar" data-nisn="0141216386">Marlo Ryanza Gumilar</option> <option value="Mega Putri Kusnadi" data-nisn="0154636435">Mega Putri Kusnadi</option> <option value="Mochamad Rave Kiyosaki" data-nisn="3143491026">Mochamad Rave Kiyosaki</option> <option value="Muhamad Rafan Fadhl Ramadhan" data-nisn="3141627817">Muhamad Rafan Fadhl Ramadhan</option> <option value="Muhammad Arkan Juniar Said" data-nisn="0148636546">Muhammad Arkan Juniar Said</option> <option value="Muhammad Borneo Nisypu Atmanta" data-nisn="3134815769">Muhammad Borneo Nisypu Atmanta</option> <option value="Muhammad Ikhwan Nurshidiq" data-nisn="3142287138">Muhammad Ikhwan Nurshidiq</option> <option value="Muhammad Syafiq Firdaus" data-nisn="3141924035">Muhammad Syafiq Firdaus</option> <option value="Nur Annisa Aprilia" data-nisn="0156801435">Nur Annisa Aprilia</option> <option value="Raffan Luthfi Hamizan" data-nisn="3147839479">Raffan Luthfi Hamizan</option> <option value="Ratu Dena Syaira Cinta Kusumadewi" data-nisn="3153201822">Ratu Dena Syaira Cinta Kusumadewi</option> <option value="Rehan Arta Wijaya" data-nisn="0152179316">Rehan Arta Wijaya</option> <option value="Revan Ardiansyah" data-nisn="3143984507">Revan Ardiansyah</option> <option value="Revina Daniyanti" data-nisn="0149063905">Revina Daniyanti</option> <option value="Safura Putri Kirana" data-nisn="3142784693">Safura Putri Kirana</option> <option value="Sahman Al Faeyza Budiman" data-nisn="3145803541">Sahman Al Faeyza Budiman</option> <option value="Stefany Elva Chyntia Siagian" data-nisn="3140750014">Stefany Elva Chyntia Siagian</option> <option value="Tesa Bestari" data-nisn="0155082431">Tesa Bestari</option> <option value="Zahran Hilman Suryadi" data-nisn="0143372752">Zahran Hilman Suryadi</option> <option value="Zidan Arkana Sopian" data-nisn="3156618146">Zidan Arkana Sopian</option> </select>
+       </div>
+       <div><label for="student-id" class="block text-sm font-semibold text-gray-700 mb-2">NISN</label> <input type="text" id="student-id" required readonly class="input-field w-full px-4 py-3 rounded-xl outline-none text-gray-800 bg-gray-50" placeholder="NISN otomatis terisi">
+       </div>
+       <div><label class="block text-sm font-semibold text-gray-700 mb-2">Status Kehadiran</label>
+        <div class="grid grid-cols-2 gap-2"><label class="relative cursor-pointer"> <input type="radio" name="status" value="Hadir" class="peer sr-only" checked>
+          <div class="px-4 py-3 rounded-xl border-2 border-gray-200 text-center font-medium text-gray-600 peer-checked:border-green-500 peer-checked:bg-green-50 peer-checked:text-green-700 transition-all">
+           ✓ Hadir
+          </div></label> <label class="relative cursor-pointer"> <input type="radio" name="status" value="Izin" class="peer sr-only">
+          <div class="px-4 py-3 rounded-xl border-2 border-gray-200 text-center font-medium text-gray-600 peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-checked:text-amber-700 transition-all">
+           📋 Izin
+          </div></label> <label class="relative cursor-pointer"> <input type="radio" name="status" value="Sakit" class="peer sr-only">
+          <div class="px-4 py-3 rounded-xl border-2 border-gray-200 text-center font-medium text-gray-600 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 transition-all">
+           💊 Sakit
+          </div></label> <label class="relative cursor-pointer"> <input type="radio" name="status" value="Alpha" class="peer sr-only">
+          <div class="px-4 py-3 rounded-xl border-2 border-gray-200 text-center font-medium text-gray-600 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 transition-all">
+           ✗ Alpha
+          </div></label>
+        </div>
+       </div>
+       <div><label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">Keterangan (Opsional)</label> <textarea id="notes" rows="2" class="input-field w-full px-4 py-3 rounded-xl outline-none text-gray-800 resize-none" placeholder="Tambahkan keterangan..."></textarea>
+       </div><button type="submit" id="submit-btn" class="btn-primary w-full py-4 rounded-xl text-white font-semibold text-lg flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg><span id="submit-text">Simpan Kehadiran</span>
+        <div id="submit-spinner" class="spinner hidden"></div></button>
+      </form>
+      <div class="mt-4 pt-4 border-t-2 border-gray-200"><button type="button" id="mark-all-present-btn" class="w-full py-4 rounded-xl text-white font-semibold text-lg flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all hover:shadow-lg hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg><span id="mark-all-text">Hadir Semua (31 Siswa)</span>
+        <div id="mark-all-spinner" class="spinner hidden"></div></button>
+       <p class="text-xs text-gray-500 text-center mt-2">Menandai semua siswa sebagai hadir sekaligus</p>
+      </div>
+      <div class="mt-4 pt-4 border-t-2 border-gray-200"><button type="button" id="send-to-sheets-btn" class="w-full py-4 rounded-xl text-white font-semibold text-lg flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all hover:shadow-lg hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg><span id="send-sheets-text">Simpan ke Google Sheets</span>
+        <div id="send-sheets-spinner" class="spinner hidden"></div></button>
+       <p class="text-xs text-gray-500 text-center mt-2">Kirim semua data absensi ke spreadsheet Anda</p>
+      </div>
+     </div>
+    </div><!-- Attendance List -->
+    <div class="lg:col-span-2">
+     <div class="card-glass rounded-3xl p-6 animate-slide-in h-full flex flex-col" style="animation-delay: 0.3s">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+       <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg> Daftar Kehadiran <span id="total-count" class="ml-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">0</span></h2>
+       <div class="flex items-center gap-2"><input type="text" id="search-input" class="input-field px-4 py-2 rounded-xl outline-none text-gray-800 text-sm w-48" placeholder="🔍 Cari siswa...">
+       </div>
+      </div>
+      <div id="attendance-list" class="space-y-3 overflow-y-auto pr-2 flex-1">
+       <div id="empty-state" class="text-center py-12">
+        <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        <p class="text-gray-400 font-medium">Belum ada data kehadiran</p>
+        <p class="text-gray-300 text-sm mt-1">Tambahkan kehadiran siswa untuk memulai</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Toast Container -->
+   <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      class_name: 'Kelas 5B',
+      teacher_name: 'Romly Muhamad',
+      subject_name: 'SDN 119 Cijagra',
+      background_color: '#0d1b2a',
+      surface_color: '#ffffff',
+      text_color: '#1f2937',
+      primary_action_color: '#3b82f6',
+      secondary_action_color: '#6b7280',
+      font_family: 'Plus Jakarta Sans',
+      font_size: 16
+    };
+
+    // URL Google Apps Script tersimpan di sistem
+    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzxHOCpBF1PAmH8p-rIiGaJv-CPW2vefoLxq5tFcQARLTcE8bvPaGjalQXR8iXRbJXnAA/exec';
+
+    let attendanceData = [];
+    let deleteConfirmId = null;
+
+    // Initialize SDKs
+    async function initializeApp() {
+      // Set current date
+      const today = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('current-date').textContent = today.toLocaleDateString('id-ID', options);
+
+      // Initialize Element SDK
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => {
+            applyConfig(config);
+          },
+          mapToCapabilities: (config) => ({
+            recolorables: [
+              {
+                get: () => config.background_color || defaultConfig.background_color,
+                set: (value) => window.elementSdk.setConfig({ background_color: value })
+              },
+              {
+                get: () => config.surface_color || defaultConfig.surface_color,
+                set: (value) => window.elementSdk.setConfig({ surface_color: value })
+              },
+              {
+                get: () => config.text_color || defaultConfig.text_color,
+                set: (value) => window.elementSdk.setConfig({ text_color: value })
+              },
+              {
+                get: () => config.primary_action_color || defaultConfig.primary_action_color,
+                set: (value) => window.elementSdk.setConfig({ primary_action_color: value })
+              },
+              {
+                get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+                set: (value) => window.elementSdk.setConfig({ secondary_action_color: value })
+              }
+            ],
+            borderables: [],
+            fontEditable: {
+              get: () => config.font_family || defaultConfig.font_family,
+              set: (value) => window.elementSdk.setConfig({ font_family: value })
+            },
+            fontSizeable: {
+              get: () => config.font_size || defaultConfig.font_size,
+              set: (value) => window.elementSdk.setConfig({ font_size: value })
+            }
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['class_name', config.class_name || defaultConfig.class_name],
+            ['teacher_name', config.teacher_name || defaultConfig.teacher_name],
+            ['subject_name', config.subject_name || defaultConfig.subject_name]
+          ])
+        });
+      }
+
+      // Render initial empty state
+      renderAttendanceList();
+      updateStats();
+    }
+
+    // Apply configuration to UI
+    function applyConfig(config) {
+      const className = config.class_name || defaultConfig.class_name;
+      const teacherName = config.teacher_name || defaultConfig.teacher_name;
+      const subjectName = config.subject_name || defaultConfig.subject_name;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const fontSize = config.font_size || defaultConfig.font_size;
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const surfaceColor = config.surface_color || defaultConfig.surface_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const primaryColor = config.primary_action_color || defaultConfig.primary_action_color;
+
+      document.getElementById('class-title').textContent = `Absensi ${className}`;
+      document.getElementById('teacher-display').innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        Guru: ${teacherName}
+      `;
+      document.getElementById('subject-display').innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+        ${subjectName}
+      `;
+
+      // Apply font
+      document.body.style.fontFamily = `${fontFamily}, sans-serif`;
+      
+      // Apply font size scaling
+      document.getElementById('class-title').style.fontSize = `${fontSize * 2}px`;
+      
+      // Apply colors
+      document.body.style.background = `linear-gradient(135deg, ${bgColor} 0%, ${adjustColor(bgColor, -20)} 100%)`;
+      
+      document.querySelectorAll('.card-glass').forEach(el => {
+        el.style.backgroundColor = surfaceColor;
+      });
+      
+      document.querySelectorAll('.btn-primary').forEach(el => {
+        el.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -20)} 100%)`;
+      });
+    }
+
+    // Adjust color brightness
+    function adjustColor(hex, percent) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+      const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
+      const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+      return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+    }
+
+    // Render attendance list
+    function renderAttendanceList() {
+      const container = document.getElementById('attendance-list');
+      const emptyState = document.getElementById('empty-state');
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      
+      const filteredData = attendanceData.filter(item => 
+        item.student_name.toLowerCase().includes(searchTerm) ||
+        item.student_id.toLowerCase().includes(searchTerm)
+      );
+
+      // Clear container
+      container.querySelectorAll('.attendance-item').forEach(el => el.remove());
+
+      if (filteredData.length === 0) {
+        emptyState.classList.remove('hidden');
+        document.getElementById('total-count').textContent = '0';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      filteredData.forEach((item, index) => {
+        const div = createAttendanceItem(item, index);
+        container.appendChild(div);
+      });
+      
+      document.getElementById('total-count').textContent = attendanceData.length;
+    }
+
+    // Create attendance item element
+    function createAttendanceItem(item, index) {
+      const div = document.createElement('div');
+      div.className = 'attendance-item table-row bg-gray-50 rounded-xl p-4 flex items-center justify-between gap-4';
+      div.dataset.id = item.id;
+      div.style.animationDelay = `${index * 0.05}s`;
+      
+      const statusColors = {
+        'Hadir': 'status-hadir',
+        'Izin': 'status-izin',
+        'Sakit': 'status-sakit',
+        'Alpha': 'status-alpha'
+      };
+
+      const statusIcons = {
+        'Hadir': '✓',
+        'Izin': '📋',
+        'Sakit': '💊',
+        'Alpha': '✗'
+      };
+
+      const isConfirming = String(deleteConfirmId) === String(item.id);
+
+      div.innerHTML = `
+        <div class="flex items-center gap-4 flex-1 min-w-0">
+          <div class="w-10 h-10 rounded-full ${statusColors[item.status]} flex items-center justify-center text-white font-bold text-lg shrink-0">
+            ${statusIcons[item.status]}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-gray-800 truncate">${item.student_name}</p>
+            <p class="text-sm text-gray-500">NISN: ${item.student_id}</p>
+            ${item.notes ? `<p class="text-xs text-gray-400 mt-1 truncate">${item.notes}</p>` : ''}
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <span class="px-3 py-1 rounded-full text-xs font-semibold text-white ${statusColors[item.status]}">${item.status}</span>
+          <span class="text-xs text-gray-400">${item.time}</span>
+          ${isConfirming ? `
+            <div class="confirm-delete flex items-center gap-2">
+              <button onclick="confirmDelete('${item.id}')" class="px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors">Hapus</button>
+              <button onclick="cancelDelete()" class="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded-lg hover:bg-gray-400 transition-colors">Batal</button>
+            </div>
+          ` : `
+            <button onclick="promptDelete('${item.id}')" class="delete-btn p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          `}
+        </div>
+      `;
+      
+      return div;
+    }
+
+    // Update statistics
+    function updateStats() {
+      const stats = { Hadir: 0, Izin: 0, Sakit: 0, Alpha: 0 };
+      attendanceData.forEach(item => {
+        if (stats.hasOwnProperty(item.status)) {
+          stats[item.status]++;
+        }
+      });
+
+      document.getElementById('stat-hadir').textContent = stats.Hadir;
+      document.getElementById('stat-izin').textContent = stats.Izin;
+      document.getElementById('stat-sakit').textContent = stats.Sakit;
+      document.getElementById('stat-alpha').textContent = stats.Alpha;
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+      
+      toast.className = `toast ${bgColor} text-white px-6 py-3 rounded-xl shadow-lg font-medium`;
+      toast.textContent = message;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Delete handlers - make them global
+    window.promptDelete = function(id) {
+      console.log('Prompt delete called for ID:', id);
+      deleteConfirmId = String(id);
+      renderAttendanceList();
+    };
+
+    window.cancelDelete = function() {
+      console.log('Cancel delete called');
+      deleteConfirmId = null;
+      renderAttendanceList();
+    };
+
+    window.confirmDelete = function(id) {
+      console.log('Confirm delete called for ID:', id);
+      const idString = String(id);
+      const itemToDelete = attendanceData.find(item => String(item.id) === idString);
+      console.log('Item to delete:', itemToDelete);
+      console.log('Current data:', attendanceData);
+      
+      if (itemToDelete) {
+        const studentName = itemToDelete.student_name;
+        attendanceData = attendanceData.filter(item => String(item.id) !== idString);
+        deleteConfirmId = null;
+        renderAttendanceList();
+        updateStats();
+        showToast(`Data ${studentName} berhasil dihapus`);
+      } else {
+        console.error('Item not found for deletion');
+        showToast('Gagal menghapus data', 'error');
+      }
+    };
+
+  // All students data
+  const allStudents = [
+    { name: "Alya Dewina Maryam", nisn: "3158356091" },
+    { name: "Alyssa Fedora", nisn: "0156165252" },
+    { name: "Arsakha Rajendra Mahanimpuna", nisn: "0143150842" },
+    { name: "Azka Faeyza Santoso", nisn: "3151827990" },
+    { name: "Chofira Azzahra", nisn: "0145518988" },
+    { name: "Choirunnisa Ramadhan", nisn: "3151247049" },
+    { name: "Faradhita Santosa", nisn: "3152669429" },
+    { name: "Firmansah Muhammad", nisn: "3155607352" },
+    { name: "Hisyam Sahila", nisn: "3143139728" },
+    { name: "Khanza Nabila", nisn: "0142577204" },
+    { name: "Lathisya Nur Mahagrani", nisn: "0158038964" },
+    { name: "Marlo Ryanza Gumilar", nisn: "0141216386" },
+    { name: "Mega Putri Kusnadi", nisn: "0154636435" },
+    { name: "Mochamad Rave Kiyosaki", nisn: "3143491026" },
+    { name: "Muhamad Rafan Fadhl Ramadhan", nisn: "3141627817" },
+    { name: "Muhammad Arkan Juniar Said", nisn: "0148636546" },
+    { name: "Muhammad Borneo Nisypu Atmanta", nisn: "3134815769" },
+    { name: "Muhammad Ikhwan Nurshidiq", nisn: "3142287138" },
+    { name: "Muhammad Syafiq Firdaus", nisn: "3141924035" },
+    { name: "Nur Annisa Aprilia", nisn: "0156801435" },
+    { name: "Raffan Luthfi Hamizan", nisn: "3147839479" },
+    { name: "Ratu Dena Syaira Cinta Kusumadewi", nisn: "3153201822" },
+    { name: "Rehan Arta Wijaya", nisn: "0152179316" },
+    { name: "Revan Ardiansyah", nisn: "3143984507" },
+    { name: "Revina Daniyanti", nisn: "0149063905" },
+    { name: "Safura Putri Kirana", nisn: "3142784693" },
+    { name: "Sahman Al Faeyza Budiman", nisn: "3145803541" },
+    { name: "Stefany Elva Chyntia Siagian", nisn: "3140750014" },
+    { name: "Tesa Bestari", nisn: "0155082431" },
+    { name: "Zahran Hilman Suryadi", nisn: "0143372752" },
+    { name: "Zidan Arkana Sopian", nisn: "3156618146" }
+  ];
+
+
+    // Auto-fill NISN when student is selected
+    document.getElementById('student-name').addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      const nisn = selectedOption.getAttribute('data-nisn');
+      document.getElementById('student-id').value = nisn || '';
+    });
+
+    // Mark all students as present
+    document.getElementById('mark-all-present-btn').addEventListener('click', async () => {
+      const markAllBtn = document.getElementById('mark-all-present-btn');
+      const markAllText = document.getElementById('mark-all-text');
+      const markAllSpinner = document.getElementById('mark-all-spinner');
+
+      // Show loading state
+      markAllBtn.disabled = true;
+      markAllText.textContent = 'Memproses...';
+      markAllSpinner.classList.remove('hidden');
+
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+      allStudents.forEach(student => {
+        const record = {
+          id: Date.now() + Math.random(),
+          student_name: student.name,
+          student_id: student.nisn,
+          status: 'Hadir',
+          date: dateStr,
+          time: timeStr,
+          notes: ''
+        };
+        attendanceData.push(record);
+      });
+
+      renderAttendanceList();
+      updateStats();
+
+      // Reset loading state
+      markAllBtn.disabled = false;
+      markAllText.textContent = 'Hadir Semua (31 Siswa)';
+      markAllSpinner.classList.add('hidden');
+
+      showToast(`${allStudents.length} siswa berhasil ditandai hadir!`);
+    });
+
+    // Form submission
+    document.getElementById('attendance-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById('submit-btn');
+      const submitText = document.getElementById('submit-text');
+      const submitSpinner = document.getElementById('submit-spinner');
+
+      // Show loading state
+      submitBtn.disabled = true;
+      submitText.textContent = 'Menyimpan...';
+      submitSpinner.classList.remove('hidden');
+
+      const studentName = document.getElementById('student-name').value.trim();
+      const studentId = document.getElementById('student-id').value.trim();
+      const status = document.querySelector('input[name="status"]:checked').value;
+      const notes = document.getElementById('notes').value.trim();
+
+      const now = new Date();
+      const record = {
+        id: Date.now() + Math.random(),
+        student_name: studentName,
+        student_id: studentId,
+        status: status,
+        date: now.toISOString().split('T')[0],
+        time: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        notes: notes
+      };
+
+      attendanceData.push(record);
+      renderAttendanceList();
+      updateStats();
+
+      showToast(`Kehadiran ${studentName} berhasil disimpan!`);
+      e.target.reset();
+      document.querySelector('input[name="status"][value="Hadir"]').checked = true;
+
+      // Reset loading state
+      submitBtn.disabled = false;
+      submitText.textContent = 'Simpan Kehadiran';
+      submitSpinner.classList.add('hidden');
+    });
+
+    // Search functionality
+    document.getElementById('search-input').addEventListener('input', () => {
+      renderAttendanceList();
+    });
+
+    // Send to Google Sheets functionality
+    document.getElementById('send-to-sheets-btn').addEventListener('click', async () => {
+      if (attendanceData.length === 0) {
+        showToast('Tidak ada data untuk dikirim', 'error');
+        return;
+      }
+
+      const sendBtn = document.getElementById('send-to-sheets-btn');
+      const sendText = document.getElementById('send-sheets-text');
+      const sendSpinner = document.getElementById('send-sheets-spinner');
+
+      // Show loading state
+      sendBtn.disabled = true;
+      sendText.textContent = 'Mengirim...';
+      sendSpinner.classList.remove('hidden');
+
+      try {
+        // Prepare data for Google Sheets
+        const dataToSend = attendanceData.map(item => ({
+          nama: item.student_name,
+          nisn: item.student_id,
+          status: item.status,
+          tanggal: item.date,
+          waktu: item.time,
+          keterangan: item.notes || ''
+        }));
+
+        // Send data via POST request
+        const response = await fetch(GOOGLE_SHEETS_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ data: dataToSend })
+        });
+
+        // no-cors mode doesn't allow reading response, so we assume success
+        showToast(`${attendanceData.length} data berhasil dikirim ke Google Sheets!`);
+        
+      } catch (error) {
+        showToast('Gagal mengirim data. Coba lagi nanti', 'error');
+      }
+
+      // Reset loading state
+      sendBtn.disabled = false;
+      sendText.textContent = 'Kirim ke Google Sheets';
+      sendSpinner.classList.add('hidden');
+    });
+
+    // Initialize app
+    initializeApp();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bfed06f271b3e31',t:'MTc2ODc0Njg3Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
